@@ -14,7 +14,8 @@ public interface JsonHandler {
      * @param parsingState a representation of what is currently being parsed
      * @param fieldName the fieldName of the parsed field. This is null for the root object, any array entries, and null on END_OBJECT and END_ARRAY parsing states.
      * @param value the primitive value being read. This is only non-null when parsingState is READ_PRIMITIVE
+     * @return should parsing continue, true if parsing should continue, false for an early stop
      */
-    public void handleJson(JsonParsingState parsingState, String fieldName, JsonPrimitive value);
+    public boolean handleJson(JsonParsingState parsingState, String fieldName, JsonPrimitive value);
     
 }

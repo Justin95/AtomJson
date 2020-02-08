@@ -19,8 +19,8 @@ public abstract class JsonHandlerPlus implements JsonHandler {
     
     //make this method final so it isnt accidentally overridden instead of handleJsonPlus
     @Override
-    public final void handleJson(JsonParsingState parsingState, String fieldName, JsonPrimitive value) {
-        handleJsonPlus(parsingState, fieldName, value);
+    public final boolean handleJson(JsonParsingState parsingState, String fieldName, JsonPrimitive value) {
+        boolean status = handleJsonPlus(parsingState, fieldName, value);
         switch(parsingState) {
             case BEGIN_OBJECT:
                 jsonStack.push(new BranchObject(fieldName));
@@ -39,6 +39,7 @@ public abstract class JsonHandlerPlus implements JsonHandler {
                 }
                 break;
         }
+        return status;
     }
     
     /**
@@ -47,8 +48,9 @@ public abstract class JsonHandlerPlus implements JsonHandler {
      * @param parsingState a representation of what is currently being parsed
      * @param fieldName the fieldName of the parsed field. This is null for the root object, any array entries, and null on END_OBJECT and END_ARRAY parsing states.
      * @param value the primitive value being read. This is only non-null when parsingState is READ_PRIMITIVE
+     * @return should parsing continue, true if parsing should continue, false for an early stop
      */
-    public abstract void handleJsonPlus(JsonParsingState parsingState, String fieldName, JsonPrimitive value);
+    public abstract boolean handleJsonPlus(JsonParsingState parsingState, String fieldName, JsonPrimitive value);
     
     protected static enum JsonBranchType {
         JSON_OBJECT,

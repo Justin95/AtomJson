@@ -2,7 +2,6 @@
 package atomjson;
 
 import atomjson.exceptions.JsonException;
-import atomjson.exceptions.JsonSyntaxException;
 
 /**
  * Represent a JSON primitive value. ie a boolean, string, number or null.
@@ -24,14 +23,15 @@ public class JsonPrimitive {
     /**
      * The Type of this JsonPrimitive.
      */
-    private JsonPrimitiveType type;
+    private final JsonPrimitiveType type;
     
     /**
      * 
      * @param primitiveStr the underlying string of this Json primitive
      */
-    JsonPrimitive(String primitiveStr) {
+    JsonPrimitive(JsonPrimitiveType type, String primitiveStr) {
         this.primitiveStr = primitiveStr;
+        this.type = type;
     }
     
     /**
@@ -39,6 +39,7 @@ public class JsonPrimitive {
      * @return the type
      */
     public JsonPrimitiveType getType() {
+        /*
         if (this.type == null) {
             for (JsonPrimitiveType potentialType : JsonPrimitiveType.values()) {
                 if (potentialType.idRegex.matcher(primitiveStr).matches()) {
@@ -48,6 +49,7 @@ public class JsonPrimitive {
             }
             throw new JsonSyntaxException("Could not parse type of primitive.");
         }
+        */
         return type;
     }
     
@@ -86,8 +88,7 @@ public class JsonPrimitive {
         if (getType() != JsonPrimitiveType.STRING) {
             throw new JsonException("Tried to read " + getType().name() + " as a String.");
         }
-        //cut off extra '"' characters
-        return primitiveStr.substring(1, primitiveStr.length() - 1);
+        return primitiveStr;
     }
     
     /**
