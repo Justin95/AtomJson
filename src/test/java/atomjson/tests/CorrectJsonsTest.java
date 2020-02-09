@@ -11,7 +11,7 @@ import java.net.URL;
 import org.junit.Test;
 
 /**
- *
+ * Make sure that all the JSON files in valid_jsons parse without error.
  * @author Justin Bonner
  */
 public class CorrectJsonsTest {

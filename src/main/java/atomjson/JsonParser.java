@@ -20,6 +20,7 @@ public class JsonParser {
     private static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
     
     private final Reader jsonSource;
+    //could make the parser stack only store bits instead of pointers to enum objects, would only benefit deeply nested jsons
     private final Stack<ParserState> parserStack;
     
     
@@ -93,7 +94,7 @@ public class JsonParser {
         } else if (token == JsonToken.BEGIN_ARRAY) {
             parserStack.push(ParserState.JSON_ARRAY);
         } else {
-            throw new JsonSyntaxException("Expected Object or Array.");
+            throw new JsonSyntaxException("Expected Object or Array. Found " + token.name() + ".");
         }
         boolean keepParsing = true;
         boolean justEntered = true;
@@ -109,16 +110,16 @@ public class JsonParser {
                 } else if (!justEntered && token == JsonToken.COMMA) {
                     token = tokenizer.parseNextToken();
                 } else if (!justEntered && token != JsonToken.COMMA) {
-                    throw new JsonSyntaxException("Expected comma or end object.");
+                    throw new JsonSyntaxException("Expected comma or end object. Found " + token.name() + ".");
                 }
                 justEntered = false;
                 if (token != JsonToken.STRING) {
-                    throw new JsonSyntaxException("Expected key name in json object");
+                    throw new JsonSyntaxException("Expected key name in json object. Found " + token.name() + ".");
                 }
                 String name = tokenizer.readToken();
                 token = tokenizer.parseNextToken();
                 if (token != JsonToken.COLON) {
-                    throw new JsonSyntaxException("Did not find colon after key name.");
+                    throw new JsonSyntaxException("Did not find colon after key name. Found " + token.name() + ".");
                 }
                 token = tokenizer.parseNextToken();
                 JsonPrimitive value = null;
@@ -151,7 +152,7 @@ public class JsonParser {
                         justEntered = true;
                         break;
                     default:
-                        throw new JsonSyntaxException("Did not find value token after key.");
+                        throw new JsonSyntaxException("Did not find value token after key. Found " + token.name() + ".");
                 }
                 keepParsing = handler.handleJson(handlerState, name, value);
             } else if (currState == ParserState.JSON_ARRAY) {
@@ -164,7 +165,7 @@ public class JsonParser {
                 } else if (!justEntered && token == JsonToken.COMMA) {
                     token = tokenizer.parseNextToken();
                 } else if (!justEntered && token != JsonToken.COMMA) {
-                    throw new JsonSyntaxException("Expected comma or end array.");
+                    throw new JsonSyntaxException("Expected comma or end array. Found " + token.name() + ".");
                 }
                 justEntered = false;
                 JsonPrimitive value = null;
@@ -206,7 +207,7 @@ public class JsonParser {
         }
         token = tokenizer.parseNextToken();
         if (token != JsonToken.END) {
-            throw new JsonSyntaxException("Finished parsing json but source is not done.");
+            throw new JsonSyntaxException("Finished parsing json but source is not done. Found " + token.name() + ".");
         }
     }
     
@@ -326,7 +327,7 @@ public class JsonParser {
             this.reader = source;
             this.inString = false;
             this.isEscaped = false;
-            this.skipWhitespace = false;
+            this.skipWhitespace = true;
             this.guaranteedNextValue = null;
         }
         
@@ -356,7 +357,7 @@ public class JsonParser {
         }
         
         private boolean skipWhitespace() {
-            return !inString || skipWhitespace;
+            return !inString && skipWhitespace;
         }
         
         public int read() throws IOException {
@@ -385,6 +386,10 @@ public class JsonParser {
                 }
             }
             char currChar = (char)nextResult;
+            if (inString && (currChar <= 31 )) {
+                //this case would be handled fine by the parser but is not valid json
+                throw new JsonException("Unescaped control character not allowed in string.");
+            }
             if (isEscaped) {
                 isEscaped = false;
                 switch(currChar) {
@@ -423,11 +428,15 @@ public class JsonParser {
                 throw new RuntimeException("parseUnicodeHex() called improperly.");
             }
             int value = Integer.parseInt(hex, 16);
-            if (Character.isValidCodePoint(value)) {
+            if (!Character.isValidCodePoint(value)) {
                 throw new JsonException("Invalid unicode character 'u" + hex + "'.");
             }
-            this.guaranteedNextValue = Character.lowSurrogate(value);
-            return Character.lowSurrogate(value);
+            if (Character.charCount(value) == 1) {
+                return (char)value;
+            } else { //charCount == 2
+                this.guaranteedNextValue = Character.lowSurrogate(value);
+                return Character.highSurrogate(value);
+            }
         }
         
         private char reqRead() throws IOException {
