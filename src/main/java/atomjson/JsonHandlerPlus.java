@@ -31,7 +31,13 @@ public abstract class JsonHandlerPlus implements JsonHandler {
             case END_OBJECT:
             case END_ARRAY:    
                 jsonStack.pop();
-                //fallthrough
+                if (!jsonStack.isEmpty()) {
+                    JsonBranch prev = jsonStack.peek();
+                    if (prev.getBranchType() == JsonBranchType.JSON_ARRAY) {
+                        ((BranchArray)prev).index++;
+                    }
+                }
+                break;
             case READ_PRIMITIVE:
                 JsonBranch prev = jsonStack.peek();
                 if (prev.getBranchType() == JsonBranchType.JSON_ARRAY) {
@@ -59,14 +65,19 @@ public abstract class JsonHandlerPlus implements JsonHandler {
     
     protected interface JsonBranch {
         JsonBranchType getBranchType();
+        
+        /**
+         * The name of this json object or array. Will be null if this object or array is not named.
+         * ie the root or in an array.
+         * @return the name
+         */
+        String getName();
+        
     }
     
     protected static class BranchObject implements JsonBranch {
         
-        /**
-         * The name of this json object. Will be null if this object is not named. ie the root or in an array.
-         */
-        protected final String name;
+        private final String name;
         
         private BranchObject(String name) {
             this.name = name;
@@ -77,6 +88,11 @@ public abstract class JsonHandlerPlus implements JsonHandler {
             return JsonBranchType.JSON_OBJECT;
         }
         
+        @Override
+        public String getName() {
+            return this.name;
+        }
+        
     }
     
     protected static class BranchArray implements JsonBranch {
@@ -84,7 +100,7 @@ public abstract class JsonHandlerPlus implements JsonHandler {
         /**
          * The name of this json array. Will be null if this array is not named. ie the root or in an array.
          */
-        protected final String name;
+        private final String name;
         private int index;
         
         private BranchArray(String name) {
@@ -103,6 +119,11 @@ public abstract class JsonHandlerPlus implements JsonHandler {
          */
         public int getCurrentIndex() {
             return index;
+        }
+        
+        @Override
+        public String getName() {
+            return this.name;
         }
         
     }

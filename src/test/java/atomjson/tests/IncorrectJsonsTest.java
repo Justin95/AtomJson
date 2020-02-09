@@ -3,11 +3,11 @@ package atomjson.tests;
 
 import atomjson.JsonParser;
 import atomjson.exceptions.JsonException;
+import atomjson.utils.TestingUtil;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.net.URL;
 import static org.junit.Assert.fail;
 import org.junit.Test;
 
@@ -17,11 +17,11 @@ import org.junit.Test;
  */
 public class IncorrectJsonsTest {
     
-    private static final String CORRECT_JSON_DIR = "invalid_jsons";
+    private static final String INCORRECT_JSON_DIR = "invalid_jsons";
     
     @Test
     public void testCorrectJsons() throws FileNotFoundException, IOException {
-        for (File file : getFiles()) {
+        for (File file : TestingUtil.getFiles(INCORRECT_JSON_DIR)) {
             FileReader reader = new FileReader(file);
             JsonParser parser = JsonParser.getInstance(reader);
             try {
@@ -35,13 +35,6 @@ public class IncorrectJsonsTest {
             System.out.println("Incorrectly successfully parsed '" + file.getName() + "' but should have failed.");
             fail();
         }
-    }
-    
-    public static File[] getFiles() {
-        ClassLoader loader = Thread.currentThread().getContextClassLoader();
-        URL url = loader.getResource(CORRECT_JSON_DIR);
-        String path = url.getPath();
-        return new File(path).listFiles();
     }
     
 }

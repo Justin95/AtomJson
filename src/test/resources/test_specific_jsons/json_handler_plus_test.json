@@ -1,0 +1,18 @@
+[
+    true,
+    false,
+    1.0,
+    {
+        "key 1": "value 1",
+        "key 2": 2.0,
+        "key 3": null
+    },
+    {
+        "blah": {
+            "blah_2" : "blah value"
+        },
+        "blarg": {
+            "array guy": [1,2,3]
+        }
+    }
+]

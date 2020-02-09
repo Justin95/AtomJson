@@ -39,18 +39,17 @@ public class JsonPrimitive {
      * @return the type
      */
     public JsonPrimitiveType getType() {
-        /*
-        if (this.type == null) {
-            for (JsonPrimitiveType potentialType : JsonPrimitiveType.values()) {
-                if (potentialType.idRegex.matcher(primitiveStr).matches()) {
-                    this.type = potentialType;
-                    break;
-                }
-            }
-            throw new JsonSyntaxException("Could not parse type of primitive.");
-        }
-        */
         return type;
+    }
+    
+    /**
+     * Get the String for this primitive value as it appears
+     * in the raw JSON. For Strings this is the same as getAsString()
+     * and is not surrounded by quotes.
+     * @return 
+     */
+    public String getUnderlyingString() {
+        return this.primitiveStr;
     }
     
     /**

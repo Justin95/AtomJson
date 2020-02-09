@@ -8,7 +8,7 @@ import java.util.Stack;
  * Java doesn't have an Unmodifiable Stack class.
  * @author Justin Bonner
  */
-public class ReadonlyStack<E> implements Iterable {
+public class ReadonlyStack<E> implements Iterable<E> {
     
     private final Stack<E> stack;
     

@@ -91,8 +91,10 @@ public class JsonParser {
         JsonToken token = tokenizer.parseNextToken();
         if (token == JsonToken.BEGIN_OBJECT) {
             parserStack.push(ParserState.JSON_OBJECT);
+            handler.handleJson(JsonParsingState.BEGIN_OBJECT, null, null);
         } else if (token == JsonToken.BEGIN_ARRAY) {
             parserStack.push(ParserState.JSON_ARRAY);
+            handler.handleJson(JsonParsingState.BEGIN_ARRAY, null, null);
         } else {
             throw new JsonSyntaxException("Expected Object or Array. Found " + token.name() + ".");
         }
