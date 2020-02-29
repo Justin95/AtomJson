@@ -323,14 +323,16 @@ public class JsonParser {
         private boolean inString;
         private boolean isEscaped;
         private boolean skipWhitespace;
-        private Character guaranteedNextValue;
+        private boolean hasBufferedChar;
+        private char bufferedChar;
         
         private JsonReader(Reader source) {
             this.reader = source;
             this.inString = false;
             this.isEscaped = false;
             this.skipWhitespace = true;
-            this.guaranteedNextValue = null;
+            this.hasBufferedChar = false;
+            this.bufferedChar = 0;
         }
         
         public void finishString(StringBuilder dest) throws IOException {
@@ -353,7 +355,8 @@ public class JsonParser {
                 dest.append(c);
             }
             if (!Character.isWhitespace(c)) {
-                this.guaranteedNextValue = c; //put back commas or closing brakets
+                this.bufferedChar = c; //put back commas or closing brakets
+                this.hasBufferedChar = true;
             }
             this.skipWhitespace = true;
         }
@@ -363,9 +366,9 @@ public class JsonParser {
         }
         
         public int read() throws IOException {
-            if (guaranteedNextValue != null) {
-                char value = guaranteedNextValue;
-                this.guaranteedNextValue = null;
+            if (hasBufferedChar) {
+                char value = bufferedChar;
+                this.hasBufferedChar = false;
                 return value;
             }
             if (isEscaped && !inString) {
@@ -411,7 +414,7 @@ public class JsonParser {
                         return '\t';
                     case 'u':
                         //parse next 4 hex chars as unicode, uncommon code path string allocation fine
-                        return parseUnicodeHex(new String(new char[]{reqRead(), reqRead(), reqRead(), reqRead()}));
+                        return parseUnicodeHex(new String(new char[]{rawReqRead(), rawReqRead(), rawReqRead(), rawReqRead()}));
                 }
             }
             if (inString && currChar == '\\') {
@@ -424,21 +427,34 @@ public class JsonParser {
             return currChar;
         }
         
-        //TODO write a lot of tests for this
         private char parseUnicodeHex(String hex) {
             if (hex.length() != 4) {
                 throw new RuntimeException("parseUnicodeHex() called improperly.");
+            }
+            for (int i = 0; i < hex.length(); i++) {
+                char c = hex.charAt(i);
+                if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))) {
+                    throw new JsonException("Invalid Unicode escape '" + hex + "'.");
+                }
             }
             int value = Integer.parseInt(hex, 16);
             if (!Character.isValidCodePoint(value)) {
                 throw new JsonException("Invalid unicode character 'u" + hex + "'.");
             }
-            if (Character.charCount(value) == 1) {
-                return (char)value;
-            } else { //charCount == 2
-                this.guaranteedNextValue = Character.lowSurrogate(value);
-                return Character.highSurrogate(value);
+            return (char)value;
+        }
+        
+        private char rawReqRead() throws IOException {
+            if (hasBufferedChar) {
+                char value = bufferedChar;
+                this.hasBufferedChar = false;
+                return value;
             }
+            int value = reader.read();
+            if (value == -1) {
+                throw new JsonSyntaxException("Early EOF.");
+            }
+            return (char)value;
         }
         
         private char reqRead() throws IOException {
