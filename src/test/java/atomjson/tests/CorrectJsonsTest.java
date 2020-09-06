@@ -16,7 +16,7 @@ import org.junit.Test;
  */
 public class CorrectJsonsTest {
     
-    private static final String CORRECT_JSON_DIR = "valid_jsons";
+    private static final String CORRECT_JSON_DIR = "/valid_jsons";
     
     @Test
     public void testCorrectJsons() throws FileNotFoundException, IOException {

@@ -16,7 +16,7 @@ public class DeepNestTest extends AbstractJsonFromReaderTest {
     
     @Override
     public Reader getTestJson() {
-        final int DEPTH = 100000000;
+        final int DEPTH = 10000000;
         return new TestReader(DEPTH);
     }
     
